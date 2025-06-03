@@ -145,15 +145,5 @@ To remove everything:
 ./scripts/cleanup.sh
 ```
 
-## 💡 Enterprise Features
 
-This demo includes enterprise-ready features:
-- **Namespace isolation** for security
-- **External secret management** for credential rotation
-- **Helm charts** for reproducible deployments
-- **OAuth architecture** for enterprise authentication
-- **Multi-cloud compatibility** (AWS, Azure, GCP, on-premise)
-
----
-
-**Ready in 5 minutes!** ⏱️
+**Extra: Diagram integration with Keycloak : docs/ks8-integration-grafana-keycloak.png** ⏱️
