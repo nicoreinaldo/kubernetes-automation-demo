@@ -64,7 +64,7 @@ Make sure Docker Desktop is running on your machine.
 ### 2. Clone and Setup
 ```bash
 # Download the project
-git clone <repository-url>
+git clone git@github.com:nicoreinaldo/kubernetes-automation-demo.git
 cd kubernetes-automation-demo
 
 # Give execution permissions to scripts
