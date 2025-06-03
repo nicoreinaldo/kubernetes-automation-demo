@@ -146,4 +146,5 @@ To remove everything:
 ```
 
 
-**Extra: Diagram integration with Keycloak : docs/ks8-integration-grafana-keycloak.png** ⏱️
+**Extra: Diagram integration with Keycloak:**  
+docs/ks8-integration-grafana-keycloak.png
