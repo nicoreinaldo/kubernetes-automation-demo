@@ -1,0 +1,139 @@
+image:
+  repository: grafana/grafana
+  tag: "10.2.0"
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+persistence:
+  enabled: true
+  type: pvc
+  size: 2Gi
+  storageClassName: standard
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: false
+  ingressClassName: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - grafana.local
+  path: /
+
+admin:
+  existingSecret: grafana-admin-credentials
+  userKey: admin-user
+  passwordKey: admin-password
+
+database:
+  type: sqlite3
+  host: ""
+  name: ""
+  user: ""
+  password: ""
+
+plugins:
+  - grafana-clock-panel
+  - grafana-simple-json-datasource
+  - grafana-worldmap-panel
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus.monitoring.svc.cluster.local:9090
+      access: proxy
+      isDefault: true
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/default
+
+# OAuth configuration (for Keycloak integration)
+grafana.ini:
+  server:
+    domain: grafana.local
+    root_url: "http://grafana.local"
+  
+  auth:
+    disable_login_form: false
+    disable_signout_menu: false
+    
+  auth.generic_oauth:
+    enabled: false
+    name: Keycloak
+    allow_sign_up: true
+    client_id: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_ID}
+    client_secret: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}
+    scopes: openid profile email
+    auth_url: http://keycloak.auth.svc.cluster.local:8080/auth/realms/demo/protocol/openid-connect/auth
+    token_url: http://keycloak.auth.svc.cluster.local:8080/auth/realms/demo/protocol/openid-connect/token
+    api_url: http://keycloak.auth.svc.cluster.local:8080/auth/realms/demo/protocol/openid-connect/userinfo
+    role_attribute_path: contains(roles[*], 'admin') && 'Admin' || contains(roles[*], 'editor') && 'Editor' || 'Viewer'
+
+env:
+  GF_AUTH_GENERIC_OAUTH_CLIENT_ID:
+    valueFrom:
+      secretKeyRef:
+        name: grafana-oauth-credentials
+        key: client-id
+  GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
+    valueFrom:
+      secretKeyRef:
+        name: grafana-oauth-credentials
+        key: client-secret
+
+securityContext:
+  runAsUser: 472
+  runAsGroup: 472
+  fsGroup: 472
+
+# Pod configuration
+podSecurityContext:
+  fsGroup: 472
+
+replicas: 1
+
+# Affinity configuration (for multi-node clusters)
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - grafana
+        topologyKey: kubernetes.io/hostname
+
+tolerations: []
+
+nodeSelector: {}
+
+# Monitoring configuration (disabled - requires Prometheus Operator)
+serviceMonitor:
+  enabled: false 
